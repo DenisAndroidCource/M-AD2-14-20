@@ -1,3 +1,4 @@
+include ':customview'
 include ':adapterexample'
 include ':recyclerview'
 include ':singletonobserverexample'
