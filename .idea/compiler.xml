@@ -3,6 +3,8 @@
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel>
       <module name="adapterexample" target="1.7" />
+      <module name="builderexample" target="1.7" />
+      <module name="kotlinexample" target="1.7" />
       <module name="singletonobserverexample" target="1.7" />
     </bytecodeTargetLevel>
   </component>

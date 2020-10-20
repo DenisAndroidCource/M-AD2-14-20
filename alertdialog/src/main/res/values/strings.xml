@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">AlertDialog</string>
+    <string name="dialogTitle">Warning</string>
+    <string name="dialogMessage">The record will be fully deleted</string>
+    <string name="dialogPositive">Ok</string>
+    <string name="dialogNegative">Cancel</string>
+</resources>
