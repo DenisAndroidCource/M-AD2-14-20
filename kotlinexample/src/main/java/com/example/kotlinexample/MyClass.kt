@@ -14,6 +14,26 @@ class MyClass {
             val user=User(name="Igor",address = "13-12",age = 18)
             val user2=User(name="Igor",address = "13-12")
 
+            val person: Person? = Person().apply {
+                id = 0
+                name = ""
+            }
+
+            person?.let {
+                it.id = 0
+                foo(it)
+            }
+
+            person?.run { foo(this) }
+                    .also {  }
+                    .also {  }
+
+            with(person) {
+
+            }
+        }
+
+        fun foo(person: Person) {
 
         }
     }
