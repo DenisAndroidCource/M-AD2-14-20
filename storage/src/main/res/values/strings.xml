@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">Storage</string>
+    <string name="checkBoxText">Upper case</string>
+    <string name="buttonText">Save</string>
+    <string name="editTextHint">Enter the text</string>
+</resources>

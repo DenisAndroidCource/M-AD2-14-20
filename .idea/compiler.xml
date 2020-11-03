@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
-    <bytecodeTargetLevel>
-      <module name="adapterexample" target="1.7" />
-      <module name="builderexample" target="1.7" />
-      <module name="kotlinexample" target="1.7" />
-      <module name="singletonobserverexample" target="1.7" />
+    <bytecodeTargetLevel target="1.7">
+      <module name="My_Application.activityexample" target="1.8" />
+      <module name="My_Application.alertdialog" target="1.8" />
+      <module name="My_Application.app" target="1.8" />
+      <module name="My_Application.customview" target="1.8" />
+      <module name="My_Application.menu" target="1.8" />
+      <module name="My_Application.recyclerview" target="1.8" />
+      <module name="My_Application.storage" target="1.8" />
+      <module name="My_Application.viewandviewgroup" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>
