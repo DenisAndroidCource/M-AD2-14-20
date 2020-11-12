@@ -1,3 +1,4 @@
+include ':dbexample'
 include ':storage'
 include ':kotlinexample'
 include ':menu'
