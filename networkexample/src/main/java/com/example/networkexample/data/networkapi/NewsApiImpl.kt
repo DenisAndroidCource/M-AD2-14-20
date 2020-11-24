@@ -1,24 +1,32 @@
 package com.example.networkexample.data.networkapi
 
-import okhttp3.*
-import java.io.IOException
+import com.example.networkexample.data.NewsData
+import com.example.networkexample.data.NewsDataListMapper
+import io.reactivex.rxjava3.core.Single
+import io.reactivex.rxjava3.schedulers.Schedulers
+import okhttp3.OkHttpClient
+import okhttp3.ResponseBody
 
-private const val TOP_HEADLINES_URL = "http://newsapi.org/v2/top-headlines?country=%s&category=business&apiKey=fe27628816ba4ca5b23fe932cf36e26e"
+class NewsApiImpl(
+        private val httpClient: OkHttpClient = OkHttpClient(),
+        private val requestFactory: RequestFactory = RequestFactoryImpl(),
+        private val dataMapper: (String) -> List<NewsData> = NewsDataListMapper()
+) : NewsApi {
 
-class NewsApiImpl: NewsApi {
-
-    private val httpClient = OkHttpClient()
-
-    override fun getTopHeadlines(country: String) {
-        val request = Request.Builder().url(TOP_HEADLINES_URL.format(country)).build()
-        httpClient.newCall(request).enqueue(object : Callback{
-            override fun onFailure(call: Call, e: IOException) {
-
+    override fun getTopHeadlines(country: String): Single<List<NewsData>> {
+        val url = requestFactory.getTopHeadLinesRequest(country)
+        return Single.create<String> { emitter ->
+            val response = httpClient.newCall(url).execute()
+            if (response.isSuccessful) {
+                if (response.body != null) {
+                    emitter.onSuccess((response.body as ResponseBody).string())
+                } else {
+                    emitter.onError(Throwable("EMPTY BODY"))
+                }
+            } else {
+                emitter.onError(Throwable("API ERROR ${response.code}"))
             }
-
-            override fun onResponse(call: Call, response: Response) {
-
-            }
-        })
+        }.map<List<NewsData>> { data -> dataMapper(data) }
+                .subscribeOn(Schedulers.io())
     }
 }
