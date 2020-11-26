@@ -29,29 +29,35 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        executor.submit(Runnable {
-            for (i in 0..100) {
-                Thread.sleep(100)
-                Log.d("THREAD", Thread.currentThread().name)
-
-                handler.post(Runnable {
-                    progressBar.progress = i
-                    text.text = i.toString()
-                })
-            }
-        })
-
-        val future: Future<Int> = executor.submit(Callable {
-            Thread.sleep(100)
-            100
-        })
-
-        val result = future.get()
+//        executor.submit(Runnable {
+//            for (i in 0..100) {
+//                Thread.sleep(100)
+//                Log.d("THREAD", Thread.currentThread().name)
+//
+//                handler.post(Runnable {
+//                    progressBar.progress = i
+//                    text.text = i.toString()
+//                })
+//            }
+//        })
+//
+//        val future: Future<Int> = executor.submit(Callable {
+//            Thread.sleep(100)
+//            100
+//        })
+//
+//        val result = future.get()
 
         CompletableFuture.supplyAsync(Supplier {
             Thread.sleep(100)
-            100
+            val a = 3 % 2
+            if (a == 0) {
+                100
+            } else {
+                100
+            }
         }).thenApplyAsync {result -> result+1  }
+                .exceptionally { th -> Log.d("ERR", th.toString()) }
                 .thenRunAsync(Runnable {  }, mainExecutor)
 
         Observable.create<Int> {emitter -> emitter.onNext(100) }
