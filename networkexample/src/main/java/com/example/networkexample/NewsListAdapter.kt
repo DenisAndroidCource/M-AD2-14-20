@@ -7,13 +7,15 @@ import com.bumptech.glide.Glide
 import com.example.networkexample.data.NewsData
 import com.example.networkexample.databinding.ItemNewsBinding
 
-class NewsListAdapter : RecyclerView.Adapter<NewsListAdapter.ItemViewHolder>() {
+class NewsListAdapter(
+        private val itemClickListener: (NewsData) -> Unit
+) : RecyclerView.Adapter<NewsListAdapter.ItemViewHolder>() {
 
     private val itemList = mutableListOf<NewsData>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
         val inflater = LayoutInflater.from(parent.context)
-        return ItemViewHolder(ItemNewsBinding.inflate(inflater))
+        return ItemViewHolder(ItemNewsBinding.inflate(inflater), itemClickListener)
     }
 
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
@@ -30,7 +32,10 @@ class NewsListAdapter : RecyclerView.Adapter<NewsListAdapter.ItemViewHolder>() {
         notifyDataSetChanged()
     }
 
-    class ItemViewHolder(private val binding: ItemNewsBinding) : RecyclerView.ViewHolder(binding.root) {
+    class ItemViewHolder(
+            private val binding: ItemNewsBinding,
+            private val itemClickListener: (NewsData) -> Unit
+    ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(newsData: NewsData) {
             with(binding) {
                 textViewTitle.text = newsData.title
@@ -38,6 +43,7 @@ class NewsListAdapter : RecyclerView.Adapter<NewsListAdapter.ItemViewHolder>() {
                 Glide.with(root.context)
                         .load(newsData.urlToImage)
                         .into(imagePreview)
+                root.setOnClickListener { itemClickListener(newsData) }
             }
 
         }
