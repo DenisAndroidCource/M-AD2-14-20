@@ -1,4 +1,4 @@
-package com.example.networkexample.presentation.newslist
+package com.example.networkexample.presentation
 
 import android.os.Bundle
 import android.view.LayoutInflater

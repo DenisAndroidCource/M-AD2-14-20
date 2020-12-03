@@ -6,12 +6,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.networkexample.data.NewsData
 import com.example.networkexample.databinding.ItemNewsBinding
+import com.example.networkexample.presentation.newslist.NewsDataViewModel
 
 class NewsListAdapter(
-        private val itemClickListener: (NewsData) -> Unit
+        private val itemClickListener: (NewsDataViewModel) -> Unit
 ) : RecyclerView.Adapter<NewsListAdapter.ItemViewHolder>() {
 
-    private val itemList = mutableListOf<NewsData>()
+    private val itemList = mutableListOf<NewsDataViewModel>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -24,7 +25,7 @@ class NewsListAdapter(
 
     override fun getItemCount() = itemList.size
 
-    fun updateItems(listNewsData: List<NewsData>) {
+    fun updateItems(listNewsData: List<NewsDataViewModel>) {
         itemList.apply {
             clear()
             addAll(listNewsData)
@@ -34,9 +35,9 @@ class NewsListAdapter(
 
     class ItemViewHolder(
             private val binding: ItemNewsBinding,
-            private val itemClickListener: (NewsData) -> Unit
+            private val itemClickListener: (NewsDataViewModel) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(newsData: NewsData) {
+        fun bind(newsData: NewsDataViewModel) {
             with(binding) {
                 textViewTitle.text = newsData.title
                 textViewDescription.text = newsData.description

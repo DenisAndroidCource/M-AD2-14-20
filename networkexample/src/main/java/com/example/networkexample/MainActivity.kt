@@ -3,7 +3,7 @@ package com.example.networkexample
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.networkexample.databinding.ActivityMainBinding
-import com.example.networkexample.presentation.newslist.FragmentNewsReader
+import com.example.networkexample.presentation.FragmentNewsReader
 import com.example.networkexample.presentation.newslist.NewsListFragment
 
 interface onNewsActionListener {

@@ -1,0 +1,1067 @@
+Index: mvpexample/src/main/java/com/example/mvpexample/data/networkapi/NewsApi.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/src/main/java/com/example/mvpexample/data/networkapi/NewsApi.kt	(date 1606237475618)
++++ mvpexample/src/main/java/com/example/mvpexample/data/networkapi/NewsApi.kt	(date 1606237475618)
+@@ -0,0 +1,8 @@
++package com.example.networkexample.data.networkapi
++
++import com.example.networkexample.data.NewsData
++import io.reactivex.rxjava3.core.Single
++
++interface NewsApi {
++    fun getTopHeadlines(country: String): Single<List<NewsData>>
++}
+\ No newline at end of file
+Index: mvpexample/src/main/java/com/example/mvpexample/data/networkapi/RequestFactory.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/src/main/java/com/example/mvpexample/data/networkapi/RequestFactory.kt	(date 1606235124760)
++++ mvpexample/src/main/java/com/example/mvpexample/data/networkapi/RequestFactory.kt	(date 1606235124760)
+@@ -0,0 +1,7 @@
++package com.example.networkexample.data.networkapi
++
++import okhttp3.Request
++
++interface RequestFactory {
++    fun getTopHeadLinesRequest(country: String) : Request
++}
+\ No newline at end of file
+Index: mvpexample/src/main/java/com/example/mvpexample/data/networkapi/NewsApiImpl.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/src/main/java/com/example/mvpexample/data/networkapi/NewsApiImpl.kt	(date 1606240449823)
++++ mvpexample/src/main/java/com/example/mvpexample/data/networkapi/NewsApiImpl.kt	(date 1606240449823)
+@@ -0,0 +1,32 @@
++package com.example.networkexample.data.networkapi
++
++import com.example.networkexample.data.NewsData
++import com.example.networkexample.data.NewsDataListMapper
++import io.reactivex.rxjava3.core.Single
++import io.reactivex.rxjava3.schedulers.Schedulers
++import okhttp3.OkHttpClient
++import okhttp3.ResponseBody
++
++class NewsApiImpl(
++        private val httpClient: OkHttpClient = OkHttpClient(),
++        private val requestFactory: RequestFactory = RequestFactoryImpl(),
++        private val dataMapper: (String) -> List<NewsData> = NewsDataListMapper()
++) : NewsApi {
++
++    override fun getTopHeadlines(country: String): Single<List<NewsData>> {
++        val url = requestFactory.getTopHeadLinesRequest(country)
++        return Single.create<String> { emitter ->
++            val response = httpClient.newCall(url).execute()
++            if (response.isSuccessful) {
++                if (response.body != null) {
++                    emitter.onSuccess((response.body as ResponseBody).string())
++                } else {
++                    emitter.onError(Throwable("EMPTY BODY"))
++                }
++            } else {
++                emitter.onError(Throwable("API ERROR ${response.code}"))
++            }
++        }.map<List<NewsData>> { data -> dataMapper(data) }
++                .subscribeOn(Schedulers.io())
++    }
++}
+\ No newline at end of file
+Index: networkexample/src/main/java/com/example/networkexample/MainActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.networkexample\r\n\r\nimport android.os.Bundle\r\nimport androidx.appcompat.app.AppCompatActivity\r\nimport com.example.networkexample.databinding.ActivityMainBinding\r\nimport com.example.networkexample.presentation.newslist.FragmentNewsReader\r\nimport com.example.networkexample.presentation.newslist.NewsListFragment\r\n\r\ninterface onNewsActionListener {\r\n    fun openNews(url: String)\r\n}\r\n\r\nclass MainActivity : AppCompatActivity(), onNewsActionListener {\r\n\r\n    private lateinit var binding: ActivityMainBinding\r\n\r\n    override fun onCreate(savedInstanceState: Bundle?) {\r\n        super.onCreate(savedInstanceState)\r\n        setContentView(R.layout.activity_main)\r\n        binding = ActivityMainBinding.inflate(layoutInflater)\r\n        showNewsListFragment()\r\n\r\n    }\r\n\r\n    private fun showNewsListFragment() {\r\n        supportFragmentManager.beginTransaction()\r\n                .add(R.id.fragmentContainer, NewsListFragment())\r\n                .commit()\r\n    }\r\n\r\n    private fun showFragmentNewsReader(url: String) {\r\n        if (binding.fragmentContainer2 != null) {\r\n            val fragment = supportFragmentManager.findFragmentById(R.id.fragmentContainer2)\r\n            if (fragment != null) {\r\n                (fragment as FragmentNewsReader).loadUrl(url)\r\n            } else {\r\n                supportFragmentManager.beginTransaction()\r\n                        .add(R.id.fragmentContainer2, FragmentNewsReader.newInstance(url))\r\n                        .addToBackStack(null)\r\n                        .commit()\r\n            }\r\n        } else {\r\n            supportFragmentManager.beginTransaction()\r\n                    .add(R.id.fragmentContainer, FragmentNewsReader.newInstance(url))\r\n                    .addToBackStack(null)\r\n                    .commit()\r\n        }\r\n    }\r\n\r\n    override fun openNews(url: String) {\r\n        showFragmentNewsReader(url)\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- networkexample/src/main/java/com/example/networkexample/MainActivity.kt	(revision ceba4a07446ac13d4b4a546289dfbf6621f79170)
++++ networkexample/src/main/java/com/example/networkexample/MainActivity.kt	(date 1607015058795)
+@@ -3,7 +3,7 @@
+ import android.os.Bundle
+ import androidx.appcompat.app.AppCompatActivity
+ import com.example.networkexample.databinding.ActivityMainBinding
+-import com.example.networkexample.presentation.newslist.FragmentNewsReader
++import com.example.networkexample.presentation.FragmentNewsReader
+ import com.example.networkexample.presentation.newslist.NewsListFragment
+ 
+ interface onNewsActionListener {
+Index: mvpexample/src/main/java/com/example/mvpexample/data/NewsData.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/src/main/java/com/example/mvpexample/data/NewsData.kt	(date 1606238172061)
++++ mvpexample/src/main/java/com/example/mvpexample/data/NewsData.kt	(date 1606238172061)
+@@ -0,0 +1,8 @@
++package com.example.networkexample.data
++
++data class NewsData (
++        val title: String,
++        val description: String,
++        val url: String,
++        val urlToImage: String
++)
+\ No newline at end of file
+Index: mvpexample/src/main/java/com/example/mvpexample/data/networkapi/RequestFactoryImpl.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/src/main/java/com/example/mvpexample/data/networkapi/RequestFactoryImpl.kt	(date 1606238742669)
++++ mvpexample/src/main/java/com/example/mvpexample/data/networkapi/RequestFactoryImpl.kt	(date 1606238742669)
+@@ -0,0 +1,16 @@
++package com.example.networkexample.data.networkapi
++
++import okhttp3.Request
++
++private const val API_KEY = "fe27628816ba4ca5b23fe932cf36e26e"
++private const val TOP_HEADLINES_URL = "https://newsapi.org/v2/top-headlines?country=%s&category=business&apiKey=%s"
++
++class RequestFactoryImpl : RequestFactory {
++
++    override fun getTopHeadLinesRequest(country: String): Request {
++        val url = TOP_HEADLINES_URL.format(country, API_KEY)
++        return Request.Builder().url(url).build()
++    }
++
++
++}
+\ No newline at end of file
+Index: networkexample/src/main/java/com/example/networkexample/presentation/newslist/NewsListFragment.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.networkexample.presentation.newslist\r\n\r\nimport android.content.Context\r\nimport android.os.Bundle\r\nimport android.util.Log\r\nimport android.view.LayoutInflater\r\nimport android.view.View\r\nimport android.view.ViewGroup\r\nimport androidx.fragment.app.Fragment\r\nimport androidx.recyclerview.widget.LinearLayoutManager\r\nimport androidx.recyclerview.widget.RecyclerView\r\nimport com.example.networkexample.NewsListAdapter\r\nimport com.example.networkexample.R\r\nimport com.example.networkexample.data.networkapi.NewsApiImpl\r\nimport com.example.networkexample.onNewsActionListener\r\nimport com.google.android.material.snackbar.Snackbar\r\nimport io.reactivex.rxjava3.android.schedulers.AndroidSchedulers\r\n\r\nclass NewsListFragment : Fragment() {\r\n    private lateinit var recyclerView: RecyclerView\r\n    private val newsApi = NewsApiImpl()\r\n    private val newsListAdapter by lazy { NewsListAdapter { data -> onNewsActionListener?.openNews(data.url) } }\r\n    private var onNewsActionListener: onNewsActionListener? = null\r\n\r\n    override fun onAttach(context: Context) {\r\n        super.onAttach(context)\r\n        if (context is onNewsActionListener) {\r\n            onNewsActionListener = context\r\n        }\r\n    }\r\n\r\n    override fun onCreateView(\r\n            inflater: LayoutInflater,\r\n            container: ViewGroup?,\r\n            savedInstanceState: Bundle?\r\n    ): View = inflater.inflate(R.layout.fragment_newslist, container, false)\r\n\r\n    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {\r\n        super.onViewCreated(view, savedInstanceState)\r\n        recyclerView = view.findViewById(R.id.recyclerView)\r\n        recyclerView.apply {\r\n            adapter = newsListAdapter\r\n            layoutManager = LinearLayoutManager(this@NewsListFragment.context, RecyclerView.VERTICAL, false)\r\n        }\r\n        newsApi.getTopHeadlines(\"US\")\r\n                .observeOn(AndroidSchedulers.mainThread())\r\n                .subscribe(\r\n                        { dataList -> newsListAdapter.updateItems(dataList) },\r\n                        { Snackbar.make(view, R.string.error_message, Snackbar.LENGTH_SHORT).show() }\r\n                )\r\n    }\r\n\r\n\r\n}\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- networkexample/src/main/java/com/example/networkexample/presentation/newslist/NewsListFragment.kt	(revision ceba4a07446ac13d4b4a546289dfbf6621f79170)
++++ networkexample/src/main/java/com/example/networkexample/presentation/newslist/NewsListFragment.kt	(date 1607019593640)
+@@ -2,23 +2,26 @@
+ 
+ import android.content.Context
+ import android.os.Bundle
+-import android.util.Log
+ import android.view.LayoutInflater
+ import android.view.View
+ import android.view.ViewGroup
+ import androidx.fragment.app.Fragment
++import androidx.lifecycle.Observer
+ import androidx.recyclerview.widget.LinearLayoutManager
+ import androidx.recyclerview.widget.RecyclerView
+ import com.example.networkexample.NewsListAdapter
+ import com.example.networkexample.R
+-import com.example.networkexample.data.networkapi.NewsApiImpl
++import com.example.networkexample.data.MyLocationLifecycle
+ import com.example.networkexample.onNewsActionListener
+ import com.google.android.material.snackbar.Snackbar
+-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
++
++class NewsListFragment : Fragment(), NewsListView {
+ 
+-class NewsListFragment : Fragment() {
++
++    private val presenter = NewsListPresenterImpl(this)
++
+     private lateinit var recyclerView: RecyclerView
+-    private val newsApi = NewsApiImpl()
++
+     private val newsListAdapter by lazy { NewsListAdapter { data -> onNewsActionListener?.openNews(data.url) } }
+     private var onNewsActionListener: onNewsActionListener? = null
+ 
+@@ -42,14 +45,35 @@
+             adapter = newsListAdapter
+             layoutManager = LinearLayoutManager(this@NewsListFragment.context, RecyclerView.VERTICAL, false)
+         }
+-        newsApi.getTopHeadlines("US")
+-                .observeOn(AndroidSchedulers.mainThread())
+-                .subscribe(
+-                        { dataList -> newsListAdapter.updateItems(dataList) },
+-                        { Snackbar.make(view, R.string.error_message, Snackbar.LENGTH_SHORT).show() }
+-                )
++
++        presenter.fetchNewsList()
++
++        presenter.liveData.observe(viewLifecycleOwner, Observer { newsList ->
++            newsListAdapter.updateItems(newsList)
++        })
++
++        viewLifecycleOwner.lifecycle.addObserver(MyLocationLifecycle())
+     }
+ 
++    override fun onDestroyView() {
++        super.onDestroyView()
++        presenter.close()
++    }
+ 
++    override fun onStartLoading() {
++
++    }
++
++    override fun onStopLoading() {
++
++    }
++
++    override fun showNewsList(newsList: List<NewsDataViewModel>) {
++        newsListAdapter.updateItems(newsList)
++    }
++
++    override fun onError(message: String) {
++        view?.run { Snackbar.make(this, message, Snackbar.LENGTH_SHORT).show() }
++    }
+ }
+ 
+Index: mvpexample/src/main/java/com/example/mvpexample/data/NewsDataListMapper.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/src/main/java/com/example/mvpexample/data/NewsDataListMapper.kt	(date 1605809628569)
++++ mvpexample/src/main/java/com/example/mvpexample/data/NewsDataListMapper.kt	(date 1605809628569)
+@@ -0,0 +1,22 @@
++package com.example.networkexample.data
++
++import org.json.JSONObject
++
++class NewsDataListMapper : (String) -> List<NewsData> {
++    override fun invoke(json: String): List<NewsData> {
++        val jsonMainObject = JSONObject(json)
++        val articles = jsonMainObject.getJSONArray("articles")
++        val list = mutableListOf<NewsData>()
++        for (i in 0 until articles.length()) {
++            val jsonArticle = articles.getJSONObject(i)
++            val newsData = NewsData(
++                    title = jsonArticle.getString("title"),
++                    description = jsonArticle.getString("description"),
++                    url = jsonArticle.getString("url"),
++                    urlToImage = jsonArticle.getString("urlToImage")
++            )
++            list.add(newsData)
++        }
++        return list
++    }
++}
+\ No newline at end of file
+Index: networkexample/src/main/java/com/example/networkexample/presentation/newslist/NewsListContract.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- networkexample/src/main/java/com/example/networkexample/presentation/newslist/NewsListContract.kt	(date 1607016855565)
++++ networkexample/src/main/java/com/example/networkexample/presentation/newslist/NewsListContract.kt	(date 1607016855565)
+@@ -0,0 +1,20 @@
++package com.example.networkexample.presentation.newslist
++
++interface NewsListPresenter {
++    fun fetchNewsList()
++    fun close()
++}
++
++interface NewsListView {
++    fun onStartLoading()
++    fun onStopLoading()
++    fun showNewsList(newsList: List<NewsDataViewModel>)
++    fun onError(message: String)
++}
++
++class NewsDataViewModel(
++        val title: String,
++        val description: String,
++        val url: String,
++        val urlToImage: String
++)
+\ No newline at end of file
+Index: networkexample/src/main/java/com/example/networkexample/presentation/newslist/NewsDataViewModelMapper.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- networkexample/src/main/java/com/example/networkexample/presentation/newslist/NewsDataViewModelMapper.kt	(date 1607015058795)
++++ networkexample/src/main/java/com/example/networkexample/presentation/newslist/NewsDataViewModelMapper.kt	(date 1607015058795)
+@@ -0,0 +1,15 @@
++package com.example.networkexample.presentation.newslist
++
++import com.example.networkexample.data.NewsData
++
++class NewsDataViewModelMapper : (List<NewsData>) -> List<NewsDataViewModel> {
++    override fun invoke(newsDataList: List<NewsData>) =
++            newsDataList.map { item ->
++                NewsDataViewModel(
++                        title = item.title,
++                        description = item.description,
++                        url = item.url,
++                        urlToImage = item.urlToImage
++                )
++            }
++}
+\ No newline at end of file
+Index: networkexample/src/main/java/com/example/networkexample/presentation/newslist/NewsListPresenterImpl.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- networkexample/src/main/java/com/example/networkexample/presentation/newslist/NewsListPresenterImpl.kt	(date 1607019593640)
++++ networkexample/src/main/java/com/example/networkexample/presentation/newslist/NewsListPresenterImpl.kt	(date 1607019593640)
+@@ -0,0 +1,45 @@
++package com.example.networkexample.presentation.newslist
++
++import androidx.lifecycle.MutableLiveData
++import com.example.networkexample.data.NewsData
++import com.example.networkexample.data.networkapi.NewsApi
++import com.example.networkexample.data.networkapi.NewsApiImpl
++import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
++import io.reactivex.rxjava3.disposables.Disposable
++import io.reactivex.rxjava3.schedulers.Schedulers
++
++class NewsListPresenterImpl(
++        private var newsListView: NewsListView?,
++        private val newsApi: NewsApi = NewsApiImpl(),
++        private val newsDataViewModelMapper: (List<NewsData>) -> List<NewsDataViewModel> = NewsDataViewModelMapper()
++) : NewsListPresenter {
++
++    val liveData = MutableLiveData<List<NewsDataViewModel>>()
++
++    private var disposable: Disposable? = null
++
++    override fun fetchNewsList() {
++        newsListView?.onStartLoading()
++        disposable = newsApi.getTopHeadlines("US")
++                .subscribeOn(Schedulers.computation())
++                .map { data -> newsDataViewModelMapper(data) }
++                .observeOn(AndroidSchedulers.mainThread())
++                .subscribe(
++                        { dataViewModelList ->
++                            liveData.value = dataViewModelList
++                            newsListView?.onStopLoading()
++                            newsListView?.showNewsList(dataViewModelList)
++                        },
++                        {
++                            newsListView?.onError("Something went wrong")
++                            newsListView?.onStopLoading()
++                        }
++                )
++    }
++
++    override fun close() {
++        newsListView = null
++        disposable?.dispose()
++    }
++
++}
+\ No newline at end of file
+Index: .idea/compiler.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"CompilerConfiguration\">\r\n    <bytecodeTargetLevel target=\"1.7\">\r\n      <module name=\"My_Application.activityexample\" target=\"1.8\" />\r\n      <module name=\"My_Application.alertdialog\" target=\"1.8\" />\r\n      <module name=\"My_Application.app\" target=\"1.8\" />\r\n      <module name=\"My_Application.async\" target=\"1.8\" />\r\n      <module name=\"My_Application.customview\" target=\"1.8\" />\r\n      <module name=\"My_Application.dbexample\" target=\"1.8\" />\r\n      <module name=\"My_Application.menu\" target=\"1.8\" />\r\n      <module name=\"My_Application.networkexample\" target=\"1.8\" />\r\n      <module name=\"My_Application.recyclerview\" target=\"1.8\" />\r\n      <module name=\"My_Application.storage\" target=\"1.8\" />\r\n      <module name=\"My_Application.viewandviewgroup\" target=\"1.8\" />\r\n    </bytecodeTargetLevel>\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/compiler.xml	(revision ceba4a07446ac13d4b4a546289dfbf6621f79170)
++++ .idea/compiler.xml	(date 1607013223575)
+@@ -9,6 +9,7 @@
+       <module name="My_Application.customview" target="1.8" />
+       <module name="My_Application.dbexample" target="1.8" />
+       <module name="My_Application.menu" target="1.8" />
++      <module name="My_Application.mvpexample" target="1.8" />
+       <module name="My_Application.networkexample" target="1.8" />
+       <module name="My_Application.recyclerview" target="1.8" />
+       <module name="My_Application.storage" target="1.8" />
+Index: mvpexample/src/main/AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/src/main/AndroidManifest.xml	(date 1607013200268)
++++ mvpexample/src/main/AndroidManifest.xml	(date 1607013200268)
+@@ -0,0 +1,21 @@
++<?xml version="1.0" encoding="utf-8"?>
++<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++    package="com.example.mvpexample">
++
++    <application
++        android:allowBackup="true"
++        android:icon="@mipmap/ic_launcher"
++        android:label="@string/app_name"
++        android:roundIcon="@mipmap/ic_launcher_round"
++        android:supportsRtl="true"
++        android:theme="@style/Theme.MyApplication">
++        <activity android:name=".MainActivity">
++            <intent-filter>
++                <action android:name="android.intent.action.MAIN" />
++
++                <category android:name="android.intent.category.LAUNCHER" />
++            </intent-filter>
++        </activity>
++    </application>
++
++</manifest>
+\ No newline at end of file
+Index: networkexample/src/main/java/com/example/networkexample/data/MyLocationLifecycle.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- networkexample/src/main/java/com/example/networkexample/data/MyLocationLifecycle.kt	(date 1607018156047)
++++ networkexample/src/main/java/com/example/networkexample/data/MyLocationLifecycle.kt	(date 1607018156047)
+@@ -0,0 +1,19 @@
++package com.example.networkexample.data
++
++import androidx.lifecycle.Lifecycle
++import androidx.lifecycle.LifecycleObserver
++import androidx.lifecycle.OnLifecycleEvent
++
++class MyLocationLifecycle: LifecycleObserver {
++
++    @OnLifecycleEvent(Lifecycle.Event.ON_START)
++    fun start() {
++
++    }
++
++    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
++    fun stop(){
++
++    }
++
++}
+\ No newline at end of file
+Index: mvpexample/build.gradle
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/build.gradle	(date 1607013366031)
++++ mvpexample/build.gradle	(date 1607013366031)
+@@ -0,0 +1,50 @@
++plugins {
++    id 'com.android.application'
++    id 'kotlin-android'
++}
++
++android {
++    compileSdkVersion 30
++    buildToolsVersion "30.0.1"
++
++    defaultConfig {
++        applicationId "com.example.mvpexample"
++        minSdkVersion 21
++        targetSdkVersion 30
++        versionCode 1
++        versionName "1.0"
++
++        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
++    }
++
++    buildTypes {
++        release {
++            minifyEnabled false
++            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
++        }
++    }
++    compileOptions {
++        sourceCompatibility JavaVersion.VERSION_1_8
++        targetCompatibility JavaVersion.VERSION_1_8
++    }
++    kotlinOptions {
++        jvmTarget = '1.8'
++    }
++}
++
++dependencies {
++    implementation "com.squareup.okhttp3:okhttp:4.9.0"
++    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
++    implementation 'androidx.core:core-ktx:1.3.2'
++    implementation 'androidx.appcompat:appcompat:1.2.0'
++    implementation 'com.google.android.material:material:1.2.1'
++    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
++    testImplementation 'junit:junit:4.+'
++    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
++    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
++    implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
++    implementation "io.reactivex.rxjava3:rxjava:3.0.0"
++    implementation 'com.github.bumptech.glide:glide:4.11.0'
++    annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
++    implementation "com.google.android.material:material:1.2.0"
++}
+\ No newline at end of file
+Index: mvpexample/.gitignore
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/.gitignore	(date 1607013199169)
++++ mvpexample/.gitignore	(date 1607013199169)
+@@ -0,0 +1,1 @@
++/build
+\ No newline at end of file
+Index: networkexample/build.gradle
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>plugins {\r\n    id 'com.android.application'\r\n    id 'kotlin-android'\r\n}\r\n\r\nandroid {\r\n    compileSdkVersion 30\r\n    buildToolsVersion \"30.0.1\"\r\n\r\n    defaultConfig {\r\n        applicationId \"com.example.networkexample\"\r\n        minSdkVersion 21\r\n        targetSdkVersion 30\r\n        versionCode 1\r\n        versionName \"1.0\"\r\n\r\n        testInstrumentationRunner \"androidx.test.runner.AndroidJUnitRunner\"\r\n    }\r\n\r\n    viewBinding{\r\n        enabled = true\r\n    }\r\n    buildTypes {\r\n        release {\r\n            minifyEnabled false\r\n            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'\r\n        }\r\n    }\r\n    compileOptions {\r\n        sourceCompatibility JavaVersion.VERSION_1_8\r\n        targetCompatibility JavaVersion.VERSION_1_8\r\n    }\r\n    kotlinOptions {\r\n        jvmTarget = '1.8'\r\n    }\r\n}\r\n\r\ndependencies {\r\n    implementation \"com.squareup.okhttp3:okhttp:4.9.0\"\r\n    implementation \"org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version\"\r\n    implementation 'androidx.core:core-ktx:1.3.2'\r\n    implementation 'androidx.appcompat:appcompat:1.2.0'\r\n    implementation 'com.google.android.material:material:1.2.1'\r\n    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'\r\n    testImplementation 'junit:junit:4.+'\r\n    androidTestImplementation 'androidx.test.ext:junit:1.1.2'\r\n    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'\r\n    implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'\r\n    implementation \"io.reactivex.rxjava3:rxjava:3.0.0\"\r\n    implementation 'com.github.bumptech.glide:glide:4.11.0'\r\n    annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'\r\n    implementation \"com.google.android.material:material:1.2.0\"\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- networkexample/build.gradle	(revision ceba4a07446ac13d4b4a546289dfbf6621f79170)
++++ networkexample/build.gradle	(date 1607019159849)
+@@ -50,4 +50,5 @@
+     implementation 'com.github.bumptech.glide:glide:4.11.0'
+     annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
+     implementation "com.google.android.material:material:1.2.0"
++    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.2.0"
+ }
+\ No newline at end of file
+Index: .idea/gradle.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"GradleMigrationSettings\" migrationVersion=\"1\" />\r\n  <component name=\"GradleSettings\">\r\n    <option name=\"linkedExternalProjectsSettings\">\r\n      <GradleProjectSettings>\r\n        <option name=\"delegatedBuild\" value=\"true\" />\r\n        <option name=\"testRunner\" value=\"PLATFORM\" />\r\n        <option name=\"distributionType\" value=\"DEFAULT_WRAPPED\" />\r\n        <option name=\"externalProjectPath\" value=\"$PROJECT_DIR$\" />\r\n        <option name=\"gradleJvm\" value=\"1.8\" />\r\n        <option name=\"modules\">\r\n          <set>\r\n            <option value=\"$PROJECT_DIR$\" />\r\n            <option value=\"$PROJECT_DIR$/activityexample\" />\r\n            <option value=\"$PROJECT_DIR$/adapterexample\" />\r\n            <option value=\"$PROJECT_DIR$/alertdialog\" />\r\n            <option value=\"$PROJECT_DIR$/app\" />\r\n            <option value=\"$PROJECT_DIR$/async\" />\r\n            <option value=\"$PROJECT_DIR$/builderexample\" />\r\n            <option value=\"$PROJECT_DIR$/customview\" />\r\n            <option value=\"$PROJECT_DIR$/dbexample\" />\r\n            <option value=\"$PROJECT_DIR$/kotlinexample\" />\r\n            <option value=\"$PROJECT_DIR$/menu\" />\r\n            <option value=\"$PROJECT_DIR$/networkexample\" />\r\n            <option value=\"$PROJECT_DIR$/recyclerview\" />\r\n            <option value=\"$PROJECT_DIR$/singletonobserverexample\" />\r\n            <option value=\"$PROJECT_DIR$/storage\" />\r\n            <option value=\"$PROJECT_DIR$/viewandviewgroup\" />\r\n          </set>\r\n        </option>\r\n        <option name=\"resolveModulePerSourceSet\" value=\"false\" />\r\n        <option name=\"useQualifiedModuleNames\" value=\"true\" />\r\n      </GradleProjectSettings>\r\n    </option>\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/gradle.xml	(revision ceba4a07446ac13d4b4a546289dfbf6621f79170)
++++ .idea/gradle.xml	(date 1607013223589)
+@@ -22,6 +22,7 @@
+             <option value="$PROJECT_DIR$/dbexample" />
+             <option value="$PROJECT_DIR$/kotlinexample" />
+             <option value="$PROJECT_DIR$/menu" />
++            <option value="$PROJECT_DIR$/mvpexample" />
+             <option value="$PROJECT_DIR$/networkexample" />
+             <option value="$PROJECT_DIR$/recyclerview" />
+             <option value="$PROJECT_DIR$/singletonobserverexample" />
+Index: mvpexample/src/androidTest/java/com/example/mvpexample/ExampleInstrumentedTest.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/src/androidTest/java/com/example/mvpexample/ExampleInstrumentedTest.kt	(date 1607013199702)
++++ mvpexample/src/androidTest/java/com/example/mvpexample/ExampleInstrumentedTest.kt	(date 1607013199702)
+@@ -0,0 +1,24 @@
++package com.example.mvpexample
++
++import androidx.test.platform.app.InstrumentationRegistry
++import androidx.test.ext.junit.runners.AndroidJUnit4
++
++import org.junit.Test
++import org.junit.runner.RunWith
++
++import org.junit.Assert.*
++
++/**
++ * Instrumented test, which will execute on an Android device.
++ *
++ * See [testing documentation](http://d.android.com/tools/testing).
++ */
++@RunWith(AndroidJUnit4::class)
++class ExampleInstrumentedTest {
++    @Test
++    fun useAppContext() {
++        // Context of the app under test.
++        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
++        assertEquals("com.example.mvpexample", appContext.packageName)
++    }
++}
+\ No newline at end of file
+Index: settings.gradle
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>include ':networkexample'\r\ninclude ':async'\r\ninclude ':dbexample'\r\ninclude ':storage'\r\ninclude ':kotlinexample'\r\ninclude ':menu'\r\ninclude ':alertdialog'\r\ninclude ':builderexample'\r\ninclude ':customview'\r\ninclude ':adapterexample'\r\ninclude ':recyclerview'\r\ninclude ':singletonobserverexample'\r\ninclude ':viewandviewgroup'\r\ninclude ':activityexample'\r\ninclude ':app'\r\nrootProject.name = \"My Application\"
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- settings.gradle	(revision ceba4a07446ac13d4b4a546289dfbf6621f79170)
++++ settings.gradle	(date 1607013199563)
+@@ -1,3 +1,4 @@
++include ':mvpexample'
+ include ':networkexample'
+ include ':async'
+ include ':dbexample'
+Index: mvpexample/proguard-rules.pro
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/proguard-rules.pro	(date 1607013199262)
++++ mvpexample/proguard-rules.pro	(date 1607013199262)
+@@ -0,0 +1,21 @@
++# Add project specific ProGuard rules here.
++# You can control the set of applied configuration files using the
++# proguardFiles setting in build.gradle.
++#
++# For more details, see
++#   http://developer.android.com/guide/developing/tools/proguard.html
++
++# If your project uses WebView with JS, uncomment the following
++# and specify the fully qualified class name to the JavaScript interface
++# class:
++#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
++#   public *;
++#}
++
++# Uncomment this to preserve the line number information for
++# debugging stack traces.
++#-keepattributes SourceFile,LineNumberTable
++
++# If you keep the line number information, uncomment this to
++# hide the original source file name.
++#-renamesourcefileattribute SourceFile
+\ No newline at end of file
+Index: networkexample/src/main/java/com/example/networkexample/presentation/newslist/FragmentNewsReader.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.networkexample.presentation.newslist\r\n\r\nimport android.os.Bundle\r\nimport android.view.LayoutInflater\r\nimport android.view.View\r\nimport android.view.ViewGroup\r\nimport android.webkit.WebChromeClient\r\nimport android.webkit.WebViewClient\r\nimport androidx.fragment.app.Fragment\r\nimport com.example.networkexample.R\r\nimport com.example.networkexample.databinding.FragmentNewsreaderBinding\r\n\r\nclass FragmentNewsReader : Fragment() {\r\n\r\n    private lateinit var binding: FragmentNewsreaderBinding\r\n\r\n    override fun onCreateView(\r\n            inflater: LayoutInflater,\r\n            container: ViewGroup?,\r\n            savedInstanceState: Bundle?\r\n    ): View = inflater.inflate(R.layout.fragment_newsreader, container, false)\r\n\r\n    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {\r\n        binding = FragmentNewsreaderBinding.bind(view)\r\n        binding.webView.apply {\r\n            settings.apply {\r\n                javaScriptEnabled = true\r\n                loadsImagesAutomatically = true\r\n            }\r\n            webChromeClient = WebChromeClient()\r\n            webViewClient = WebViewClient()\r\n            loadUrl(arguments?.getString(urlKey) ?: \"\")\r\n        }\r\n    }\r\n\r\n    fun loadUrl(url: String) {\r\n        binding.webView.loadUrl(url)\r\n    }\r\n\r\n    companion object {\r\n        private const val urlKey = \"url\"\r\n        fun newInstance(url: String) = FragmentNewsReader().apply {\r\n            arguments = Bundle().apply { putString(urlKey, url) }\r\n        }\r\n    }\r\n}
+===================================================================
+--- networkexample/src/main/java/com/example/networkexample/presentation/newslist/FragmentNewsReader.kt	(revision ceba4a07446ac13d4b4a546289dfbf6621f79170)
++++ networkexample/src/main/java/com/example/networkexample/presentation/FragmentNewsReader.kt	(date 1607015058811)
+@@ -1,4 +1,4 @@
+-package com.example.networkexample.presentation.newslist
++package com.example.networkexample.presentation
+ 
+ import android.os.Bundle
+ import android.view.LayoutInflater
+Index: mvpexample/src/test/java/com/example/mvpexample/ExampleUnitTest.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/src/test/java/com/example/mvpexample/ExampleUnitTest.kt	(date 1607013199727)
++++ mvpexample/src/test/java/com/example/mvpexample/ExampleUnitTest.kt	(date 1607013199727)
+@@ -0,0 +1,17 @@
++package com.example.mvpexample
++
++import org.junit.Test
++
++import org.junit.Assert.*
++
++/**
++ * Example local unit test, which will execute on the development machine (host).
++ *
++ * See [testing documentation](http://d.android.com/tools/testing).
++ */
++class ExampleUnitTest {
++    @Test
++    fun addition_isCorrect() {
++        assertEquals(4, 2 + 2)
++    }
++}
+\ No newline at end of file
+Index: mvpexample/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/src/main/res/mipmap-anydpi-v26/ic_launcher.xml	(date 1607013199739)
++++ mvpexample/src/main/res/mipmap-anydpi-v26/ic_launcher.xml	(date 1607013199739)
+@@ -0,0 +1,5 @@
++<?xml version="1.0" encoding="utf-8"?>
++<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
++    <background android:drawable="@drawable/ic_launcher_background" />
++    <foreground android:drawable="@drawable/ic_launcher_foreground" />
++</adaptive-icon>
+\ No newline at end of file
+Index: mvpexample/src/main/res/drawable/ic_launcher_background.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/src/main/res/drawable/ic_launcher_background.xml	(date 1607013199925)
++++ mvpexample/src/main/res/drawable/ic_launcher_background.xml	(date 1607013199925)
+@@ -0,0 +1,170 @@
++<?xml version="1.0" encoding="utf-8"?>
++<vector xmlns:android="http://schemas.android.com/apk/res/android"
++    android:width="108dp"
++    android:height="108dp"
++    android:viewportWidth="108"
++    android:viewportHeight="108">
++    <path
++        android:fillColor="#3DDC84"
++        android:pathData="M0,0h108v108h-108z" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M9,0L9,108"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M19,0L19,108"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M29,0L29,108"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M39,0L39,108"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M49,0L49,108"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M59,0L59,108"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M69,0L69,108"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M79,0L79,108"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M89,0L89,108"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M99,0L99,108"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M0,9L108,9"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M0,19L108,19"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M0,29L108,29"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M0,39L108,39"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M0,49L108,49"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M0,59L108,59"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M0,69L108,69"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M0,79L108,79"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M0,89L108,89"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M0,99L108,99"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M19,29L89,29"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M19,39L89,39"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M19,49L89,49"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M19,59L89,59"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M19,69L89,69"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M19,79L89,79"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M29,19L29,89"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M39,19L39,89"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M49,19L49,89"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M59,19L59,89"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M69,19L69,89"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++    <path
++        android:fillColor="#00000000"
++        android:pathData="M79,19L79,89"
++        android:strokeWidth="0.8"
++        android:strokeColor="#33FFFFFF" />
++</vector>
+Index: mvpexample/src/main/res/drawable-v24/ic_launcher_foreground.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/src/main/res/drawable-v24/ic_launcher_foreground.xml	(date 1607013199940)
++++ mvpexample/src/main/res/drawable-v24/ic_launcher_foreground.xml	(date 1607013199940)
+@@ -0,0 +1,30 @@
++<vector xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:aapt="http://schemas.android.com/aapt"
++    android:width="108dp"
++    android:height="108dp"
++    android:viewportWidth="108"
++    android:viewportHeight="108">
++    <path android:pathData="M31,63.928c0,0 6.4,-11 12.1,-13.1c7.2,-2.6 26,-1.4 26,-1.4l38.1,38.1L107,108.928l-32,-1L31,63.928z">
++        <aapt:attr name="android:fillColor">
++            <gradient
++                android:endX="85.84757"
++                android:endY="92.4963"
++                android:startX="42.9492"
++                android:startY="49.59793"
++                android:type="linear">
++                <item
++                    android:color="#44000000"
++                    android:offset="0.0" />
++                <item
++                    android:color="#00000000"
++                    android:offset="1.0" />
++            </gradient>
++        </aapt:attr>
++    </path>
++    <path
++        android:fillColor="#FFFFFF"
++        android:fillType="nonZero"
++        android:pathData="M65.3,45.828l3.8,-6.6c0.2,-0.4 0.1,-0.9 -0.3,-1.1c-0.4,-0.2 -0.9,-0.1 -1.1,0.3l-3.9,6.7c-6.3,-2.8 -13.4,-2.8 -19.7,0l-3.9,-6.7c-0.2,-0.4 -0.7,-0.5 -1.1,-0.3C38.8,38.328 38.7,38.828 38.9,39.228l3.8,6.6C36.2,49.428 31.7,56.028 31,63.928h46C76.3,56.028 71.8,49.428 65.3,45.828zM43.4,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2c-0.3,-0.7 -0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C45.3,56.528 44.5,57.328 43.4,57.328L43.4,57.328zM64.6,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2s-0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C66.5,56.528 65.6,57.328 64.6,57.328L64.6,57.328z"
++        android:strokeWidth="1"
++        android:strokeColor="#00000000" />
++</vector>
+\ No newline at end of file
+Index: networkexample/src/main/java/com/example/networkexample/NewsListAdapter.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.networkexample\r\n\r\nimport android.view.LayoutInflater\r\nimport android.view.ViewGroup\r\nimport androidx.recyclerview.widget.RecyclerView\r\nimport com.bumptech.glide.Glide\r\nimport com.example.networkexample.data.NewsData\r\nimport com.example.networkexample.databinding.ItemNewsBinding\r\n\r\nclass NewsListAdapter(\r\n        private val itemClickListener: (NewsData) -> Unit\r\n) : RecyclerView.Adapter<NewsListAdapter.ItemViewHolder>() {\r\n\r\n    private val itemList = mutableListOf<NewsData>()\r\n\r\n    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {\r\n        val inflater = LayoutInflater.from(parent.context)\r\n        return ItemViewHolder(ItemNewsBinding.inflate(inflater), itemClickListener)\r\n    }\r\n\r\n    override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {\r\n        holder.bind(itemList[position])\r\n    }\r\n\r\n    override fun getItemCount() = itemList.size\r\n\r\n    fun updateItems(listNewsData: List<NewsData>) {\r\n        itemList.apply {\r\n            clear()\r\n            addAll(listNewsData)\r\n        }\r\n        notifyDataSetChanged()\r\n    }\r\n\r\n    class ItemViewHolder(\r\n            private val binding: ItemNewsBinding,\r\n            private val itemClickListener: (NewsData) -> Unit\r\n    ) : RecyclerView.ViewHolder(binding.root) {\r\n        fun bind(newsData: NewsData) {\r\n            with(binding) {\r\n                textViewTitle.text = newsData.title\r\n                textViewDescription.text = newsData.description\r\n                Glide.with(root.context)\r\n                        .load(newsData.urlToImage)\r\n                        .into(imagePreview)\r\n                root.setOnClickListener { itemClickListener(newsData) }\r\n            }\r\n\r\n        }\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- networkexample/src/main/java/com/example/networkexample/NewsListAdapter.kt	(revision ceba4a07446ac13d4b4a546289dfbf6621f79170)
++++ networkexample/src/main/java/com/example/networkexample/NewsListAdapter.kt	(date 1607015058842)
+@@ -6,12 +6,13 @@
+ import com.bumptech.glide.Glide
+ import com.example.networkexample.data.NewsData
+ import com.example.networkexample.databinding.ItemNewsBinding
++import com.example.networkexample.presentation.newslist.NewsDataViewModel
+ 
+ class NewsListAdapter(
+-        private val itemClickListener: (NewsData) -> Unit
++        private val itemClickListener: (NewsDataViewModel) -> Unit
+ ) : RecyclerView.Adapter<NewsListAdapter.ItemViewHolder>() {
+ 
+-    private val itemList = mutableListOf<NewsData>()
++    private val itemList = mutableListOf<NewsDataViewModel>()
+ 
+     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
+         val inflater = LayoutInflater.from(parent.context)
+@@ -24,7 +25,7 @@
+ 
+     override fun getItemCount() = itemList.size
+ 
+-    fun updateItems(listNewsData: List<NewsData>) {
++    fun updateItems(listNewsData: List<NewsDataViewModel>) {
+         itemList.apply {
+             clear()
+             addAll(listNewsData)
+@@ -34,9 +35,9 @@
+ 
+     class ItemViewHolder(
+             private val binding: ItemNewsBinding,
+-            private val itemClickListener: (NewsData) -> Unit
++            private val itemClickListener: (NewsDataViewModel) -> Unit
+     ) : RecyclerView.ViewHolder(binding.root) {
+-        fun bind(newsData: NewsData) {
++        fun bind(newsData: NewsDataViewModel) {
+             with(binding) {
+                 textViewTitle.text = newsData.title
+                 textViewDescription.text = newsData.description
+Index: mvpexample/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml	(date 1607013199956)
++++ mvpexample/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml	(date 1607013199956)
+@@ -0,0 +1,5 @@
++<?xml version="1.0" encoding="utf-8"?>
++<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
++    <background android:drawable="@drawable/ic_launcher_background" />
++    <foreground android:drawable="@drawable/ic_launcher_foreground" />
++</adaptive-icon>
+\ No newline at end of file
+Index: mvpexample/src/main/res/values/themes.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/src/main/res/values/themes.xml	(date 1607013199972)
++++ mvpexample/src/main/res/values/themes.xml	(date 1607013199972)
+@@ -0,0 +1,16 @@
++<resources xmlns:tools="http://schemas.android.com/tools">
++    <!-- Base application theme. -->
++    <style name="Theme.MyApplication" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
++        <!-- Primary brand color. -->
++        <item name="colorPrimary">@color/purple_500</item>
++        <item name="colorPrimaryVariant">@color/purple_700</item>
++        <item name="colorOnPrimary">@color/white</item>
++        <!-- Secondary brand color. -->
++        <item name="colorSecondary">@color/teal_200</item>
++        <item name="colorSecondaryVariant">@color/teal_700</item>
++        <item name="colorOnSecondary">@color/black</item>
++        <!-- Status bar color. -->
++        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
++        <!-- Customize your theme here. -->
++    </style>
++</resources>
+\ No newline at end of file
+Index: mvpexample/src/main/res/values/strings.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/src/main/res/values/strings.xml	(date 1607013199380)
++++ mvpexample/src/main/res/values/strings.xml	(date 1607013199380)
+@@ -0,0 +1,3 @@
++<resources>
++    <string name="app_name">MvpExample</string>
++</resources>
+\ No newline at end of file
+Index: mvpexample/src/main/res/values/colors.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/src/main/res/values/colors.xml	(date 1607013199987)
++++ mvpexample/src/main/res/values/colors.xml	(date 1607013199987)
+@@ -0,0 +1,10 @@
++<?xml version="1.0" encoding="utf-8"?>
++<resources>
++    <color name="purple_200">#FFBB86FC</color>
++    <color name="purple_500">#FF6200EE</color>
++    <color name="purple_700">#FF3700B3</color>
++    <color name="teal_200">#FF03DAC5</color>
++    <color name="teal_700">#FF018786</color>
++    <color name="black">#FF000000</color>
++    <color name="white">#FFFFFFFF</color>
++</resources>
+\ No newline at end of file
+Index: mvpexample/src/main/res/values-night/themes.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/src/main/res/values-night/themes.xml	(date 1607013200018)
++++ mvpexample/src/main/res/values-night/themes.xml	(date 1607013200018)
+@@ -0,0 +1,16 @@
++<resources xmlns:tools="http://schemas.android.com/tools">
++    <!-- Base application theme. -->
++    <style name="Theme.MyApplication" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
++        <!-- Primary brand color. -->
++        <item name="colorPrimary">@color/purple_200</item>
++        <item name="colorPrimaryVariant">@color/purple_700</item>
++        <item name="colorOnPrimary">@color/black</item>
++        <!-- Secondary brand color. -->
++        <item name="colorSecondary">@color/teal_200</item>
++        <item name="colorSecondaryVariant">@color/teal_200</item>
++        <item name="colorOnSecondary">@color/black</item>
++        <!-- Status bar color. -->
++        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
++        <!-- Customize your theme here. -->
++    </style>
++</resources>
+\ No newline at end of file
+Index: mvpexample/src/main/java/com/example/mvpexample/MainActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/src/main/java/com/example/mvpexample/MainActivity.kt	(date 1607013200175)
++++ mvpexample/src/main/java/com/example/mvpexample/MainActivity.kt	(date 1607013200175)
+@@ -0,0 +1,11 @@
++package com.example.mvpexample
++
++import androidx.appcompat.app.AppCompatActivity
++import android.os.Bundle
++
++class MainActivity : AppCompatActivity() {
++    override fun onCreate(savedInstanceState: Bundle?) {
++        super.onCreate(savedInstanceState)
++        setContentView(R.layout.activity_main)
++    }
++}
+\ No newline at end of file
+Index: mvpexample/src/main/res/layout/activity_main.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- mvpexample/src/main/res/layout/activity_main.xml	(date 1607013200284)
++++ mvpexample/src/main/res/layout/activity_main.xml	(date 1607013200284)
+@@ -0,0 +1,18 @@
++<?xml version="1.0" encoding="utf-8"?>
++<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:app="http://schemas.android.com/apk/res-auto"
++    xmlns:tools="http://schemas.android.com/tools"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    tools:context=".MainActivity">
++
++    <TextView
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:text="Hello World!"
++        app:layout_constraintBottom_toBottomOf="parent"
++        app:layout_constraintLeft_toLeftOf="parent"
++        app:layout_constraintRight_toRightOf="parent"
++        app:layout_constraintTop_toTopOf="parent" />
++
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
