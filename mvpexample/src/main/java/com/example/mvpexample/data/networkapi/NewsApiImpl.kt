@@ -1,16 +1,16 @@
-package com.example.networkexample.data.networkapi
+package com.example.mvpexample.data.networkapi
 
-import com.example.networkexample.data.NewsData
-import com.example.networkexample.data.NewsDataListMapper
+import com.example.mvpexample.data.NewsData
+import com.example.mvpexample.data.NewsDataListMapper
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.schedulers.Schedulers
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
 
 class NewsApiImpl(
-        private val httpClient: OkHttpClient = OkHttpClient(),
-        private val requestFactory: RequestFactory = RequestFactoryImpl(),
-        private val dataMapper: (String) -> List<NewsData> = NewsDataListMapper()
+    private val httpClient: OkHttpClient = OkHttpClient(),
+    private val requestFactory: RequestFactory = RequestFactoryImpl(),
+    private val dataMapper: (String) -> List<NewsData> = NewsDataListMapper()
 ) : NewsApi {
 
     override fun getTopHeadlines(country: String): Single<List<NewsData>> {
@@ -27,6 +27,6 @@ class NewsApiImpl(
                 emitter.onError(Throwable("API ERROR ${response.code}"))
             }
         }.map<List<NewsData>> { data -> dataMapper(data) }
-                .subscribeOn(Schedulers.io())
+            .subscribeOn(Schedulers.io())
     }
 }

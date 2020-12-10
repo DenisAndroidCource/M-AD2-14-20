@@ -1,8 +1,8 @@
-package com.example.networkexample.data
+package com.example.mvpexample.data
 
-data class NewsData (
-        val title: String,
-        val description: String,
-        val url: String,
-        val urlToImage: String
+data class NewsData(
+    val title: String,
+    val description: String,
+    val url: String,
+    val urlToImage: String
 )

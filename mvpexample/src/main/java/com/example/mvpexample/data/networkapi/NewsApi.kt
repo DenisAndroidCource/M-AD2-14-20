@@ -1,6 +1,6 @@
-package com.example.networkexample.data.networkapi
+package com.example.mvpexample.data.networkapi
 
-import com.example.networkexample.data.NewsData
+import com.example.mvpexample.data.NewsData
 import io.reactivex.rxjava3.core.Single
 
 interface NewsApi {

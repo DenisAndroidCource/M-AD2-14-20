@@ -1,3 +1,5 @@
+include ':solidexample'
+include ':mvvmnewsexample'
 include ':mvpexample'
 include ':networkexample'
 include ':async'

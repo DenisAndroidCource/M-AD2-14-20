@@ -1,4 +1,4 @@
-package com.example.networkexample
+package by.it.academy.mvvmnewsexample
 
 import org.junit.Test
 
