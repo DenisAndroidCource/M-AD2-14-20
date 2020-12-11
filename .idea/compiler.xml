@@ -10,6 +10,7 @@
       <module name="My_Application.dbexample" target="1.8" />
       <module name="My_Application.menu" target="1.8" />
       <module name="My_Application.mvpexample" target="1.8" />
+      <module name="My_Application.mvvmexample" target="1.8" />
       <module name="My_Application.networkexample" target="1.8" />
       <module name="My_Application.recyclerview" target="1.8" />
       <module name="My_Application.storage" target="1.8" />
