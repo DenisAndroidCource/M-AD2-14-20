@@ -1,0 +1,7 @@
+SOLID
+
+S - Single Responsibility   - Принцип единой отвественности
+O - Open/Close              - Принцип открытости/закрытости
+L - Liscov substitution     - Принцип подстановки Барбары Лисков
+I - Interface segregation   - Принцип разделения интерфейсов
+D - Dependency inversion    - Принцип инверсии зависимотей
