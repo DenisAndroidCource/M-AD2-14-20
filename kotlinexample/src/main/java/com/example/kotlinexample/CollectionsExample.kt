@@ -1,5 +1,9 @@
 package com.example.kotlinexample
 
+inline fun foo123() : Boolean {
+    return true
+}
+
 class CollectionsExample {
 
     val fooVal: (String) -> Int = { str -> str.length }
@@ -17,7 +21,7 @@ class CollectionsExample {
     companion object {
         @JvmStatic
         fun main(args: Array<String>) {
-
+            foo123()
 
             val mutableList = mutableListOf<Int>(3, 7)
             mutableList.add(5)
@@ -29,10 +33,10 @@ class CollectionsExample {
             mutableList.filter { it % 2 == 0 }
                     .map { item -> item.toString() }
                     .toList()
-
+            foo123()
             val unmutableList = listOf<Int>(4, 7)
 //            unmutableList.add(435)
-
+            foo123()
             val array: Array<Int> = arrayOf(0, 0)
         }
     }

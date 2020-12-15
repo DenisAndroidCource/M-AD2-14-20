@@ -1,3 +1,4 @@
+include ':cleanarchitecture'
 include ':solidexample'
 include ':mvvmexample'
 include ':mvpexample'
