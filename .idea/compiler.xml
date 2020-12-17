@@ -6,14 +6,18 @@
       <module name="My_Application.alertdialog" target="1.8" />
       <module name="My_Application.app" target="1.8" />
       <module name="My_Application.async" target="1.8" />
+      <module name="My_Application.broadcastreceiverexample" target="1.8" />
       <module name="My_Application.cleanarchitecture" target="1.8" />
+      <module name="My_Application.customactionbroadcast" target="1.8" />
       <module name="My_Application.customview" target="1.8" />
       <module name="My_Application.dbexample" target="1.8" />
       <module name="My_Application.menu" target="1.8" />
       <module name="My_Application.mvpexample" target="1.8" />
       <module name="My_Application.mvvmexample" target="1.8" />
       <module name="My_Application.networkexample" target="1.8" />
+      <module name="My_Application.notificationexample" target="1.8" />
       <module name="My_Application.recyclerview" target="1.8" />
+      <module name="My_Application.serviceexample" target="1.8" />
       <module name="My_Application.storage" target="1.8" />
       <module name="My_Application.viewandviewgroup" target="1.8" />
     </bytecodeTargetLevel>

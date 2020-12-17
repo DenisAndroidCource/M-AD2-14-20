@@ -1,3 +1,7 @@
+include ':notificationexample'
+include ':serviceexample'
+include ':customactionbroadcast'
+include ':broadcastreceiverexample'
 include ':cleanarchitecture'
 include ':solidexample'
 include ':mvvmexample'
