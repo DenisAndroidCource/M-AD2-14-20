@@ -2,16 +2,23 @@ package by.it.academy.serviceexample
 
 import android.app.Service
 import android.content.Intent
+import android.os.Binder
+import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import java.util.concurrent.TimeUnit
 
-class ServiceExample : Service() {
+interface ServiceActions {
+    fun getData(): Int
+}
+
+
+class ServiceExample : Service(), ServiceActions {
 
     private fun createNotification() {
         val notification = NotificationCompat.Builder(applicationContext, "CHANNEL")
-            .setContentTitle("Service is running")
-            .build()
+                .setContentTitle("Service is running")
+                .build()
         startForeground(10, notification)
     }
 
@@ -38,7 +45,16 @@ class ServiceExample : Service() {
         Thread(runnable).start()
     }
 
-    override fun onBind(intent: Intent?): Nothing? = null
+    override fun onUnbind(intent: Intent?): Boolean {
+        return super.onUnbind(intent)
+    }
+
+    override fun onBind(intent: Intent?): IBinder = ServiceBinder()
+
+    inner class ServiceBinder() : Binder() {
+        fun getServiceActions(): ServiceActions =
+                this@ServiceExample
+    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -47,5 +63,9 @@ class ServiceExample : Service() {
 
     companion object {
         private val LOG = "ServiceExample"
+    }
+
+    override fun getData(): Int {
+        TODO("Not yet implemented")
     }
 }
