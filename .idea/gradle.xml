@@ -19,12 +19,14 @@
             <option value="$PROJECT_DIR$/async" />
             <option value="$PROJECT_DIR$/broadcastreceiverexample" />
             <option value="$PROJECT_DIR$/builderexample" />
+            <option value="$PROJECT_DIR$/buildflavorsexample" />
             <option value="$PROJECT_DIR$/cleanarchitecture" />
             <option value="$PROJECT_DIR$/contentprovicerexample" />
             <option value="$PROJECT_DIR$/customactionbroadcast" />
             <option value="$PROJECT_DIR$/customview" />
             <option value="$PROJECT_DIR$/dbexample" />
             <option value="$PROJECT_DIR$/kotlinexample" />
+            <option value="$PROJECT_DIR$/mapsexample" />
             <option value="$PROJECT_DIR$/menu" />
             <option value="$PROJECT_DIR$/mvpexample" />
             <option value="$PROJECT_DIR$/mvvmexample" />

@@ -22,10 +22,11 @@ class DataProvider: ContentProvider() {
             selectionArgs: Array<out String>?,
             sortOrder: String?
     ): Cursor? {
-        return when(uriMatcher.match(uri)) {
-            DATA_ACTION -> database.data
-            else -> null
-        }
+//        return when(uriMatcher.match(uri)) {
+//            DATA_ACTION -> database.data
+//            else -> null
+//        }
+        return null
     }
 
     override fun getType(uri: Uri): String? {

@@ -1,3 +1,5 @@
+include ':buildflavorsexample'
+include ':mapsexample'
 include ':contentprovicerexample'
 include ':notificationexample'
 include ':serviceexample'
